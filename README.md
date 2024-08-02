@@ -2,7 +2,7 @@
 This framework aims to transfer existing single-cell cluster annotations to a new dataset by detecting cluster similarities.
 
 ## Input
-This framework takes as input two CSV files, containing the differentially expressed genes (DEGs), or marker genes, of each cluster. Inference of these DEGs should be done prior, and is not part of the framework. We recommend to filter the input data to only retain high-quality DEGs. This is currently also not part of the framework and should be done prior.
+This framework takes as input two CSV files, containing the differentially expressed genes (DEGs), or marker genes, of each cluster. Inference of these DEGs should be done prior, and is not part of the framework. We recommend filtering the input data to only retain high-quality DEGs. This is currently also not part of the framework and should be done prior.
 
 To infer DEGs, we suggest using [Seurat](https://satijalab.org/seurat/)'s [`FindAllMarkers()`](https://www.rdocumentation.org/packages/Seurat/versions/5.0.3/topics/FindAllMarkers) function, although other methods might be employed. To filter the input DEGs, we recommend to either set a cutoff (on log fold change and/or adjusted p-value), or by taking the top N best DEGs (sorting on q-value, and using fold change to break ties).
 
@@ -19,13 +19,13 @@ NOTE: The orthologous group IDs were calculated using [OrthoFinder](https://gith
 - *separator* (default = ","): the column separator of the input CSV files
 - *nb_of_background_sets* (default = 1000): the number of background sets (determines the minimal p-value that can be calculated)
 - *minimal_real_matches* (default = 2): the minimal number of background sets that has to show an overlap with the query cluster DEGs, larger than or equal to the real overlap between the query and reference cluster. E.g., if this parameter is set to 2, and there is only 1 background set of which the overlap with the query cluster is larger than or equal to the real overlap, the p-value will automatically be set to 1.
-- *compare_orthogroups* (default = `False`): use the orthogroups to compare the clusters of the different dataset. This should be set to `True` if a cross-species is being performed, it should be set to `False` if a comparison within the same species is being performed.
+- *compare_orthogroups* (default = `False`): use the orthogroups (orthologous groups) to compare the clusters of the different dataset. This should be set to `True` if a cross-species is being performed, it should be set to `False` if a comparison within the same species is being performed.
 - *significance_threshold* (default = 0.05): the adjusted p-value threshold at which the DEG overlap between two clusters is considered significant
 
 NOTE: the *nb_of_background_sets* parameter strongly affects the runtime
 
 ## Running
-Excecute the Python script in this folder.
+Execute the Python script in this folder.
 ```
 python significance_deg_overlap_pyscript.py
 ```
@@ -46,7 +46,7 @@ The framework produces two output files, and a log file in which the progress ca
   - Matching reference genes: the IDs of the matching reference DEGs (always gene IDs, thus identical to "Match IDs" in case of a comparison within-species)
 - `cluster_deg_overlap_statistics_combined_best_hits.xlsx`: this output file is a subset of the `cluster_deg_overlap_statistics.xlsx` file, but has merged the two-way comparison together by selecting the one with the lowest q-value. Then, for each cluster, only the best (significant) hit in the other dataset is retained. This is done for both datasets.
   - This output file contains the same output fields as `cluster_deg_overlap_statistics.xlsx`.
-- `log.txt`: the log file, tracking the progress of the run during excecution
+- `log.txt`: the log file, tracking the progress of the run during execution
 
 ## Dependencies
 Python dependencies are listed in [`requirements.txt`](https://github.com/VIB-PSB/cross_species_annotation_transfer/blob/main/requirements.txt).
