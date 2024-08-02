@@ -18,6 +18,32 @@ NOTE: The orthologous group IDs were calculated using [OrthoFinder](https://gith
 ## Parameters
 - *separator* (default = ","): the column separator of the input CSV files
 - *nb_of_background_sets* (default = 1000): the number of background sets (determines the minimal p-value that can be calculated)
-  <br/>NOTE: this parameter strongly affects the runtime
 - *minimal_real_matches* (default = 2): the minimal number of background sets that has to show an overlap with the query cluster DEGs, larger than or equal to the real overlap between the query and reference cluster. E.g., if this parameter is set to 2, and there is only 1 background set of which the overlap with the query cluster is larger than or equal to the real overlap, the p-value will automatically be set to 1.
 - *compare_orthogroups* (default = `False`): use the orthogroups to compare the clusters of the different dataset. This should be set to `True` if a cross-species is being performed, it should be set to `False` if a comparison within the same species is being performed.
+- *significance_threshold* (default = 0.05): the adjusted p-value threshold at which the DEG overlap between two clusters is considered significant
+
+NOTE: the *nb_of_background_sets* parameter strongly affects the runtime
+
+## Running
+Excecute the Python script in this folder.
+```
+python significance_deg_overlap_pyscript.py
+```
+
+## Output
+The framework produces two output files, and a log file in which the progress can be followed during execution.
+
+- `cluster_deg_overlap_statistics.xlsx`: this output file is the most verbose and contains information on the all-versus-all cluster comparisons. For each comparison, two tabs are present where the query and reference dataset is reversed. I.e., in the first comparisons, backgrounds sets are being generated of the first dataset, while in the second, background sets are generated for the other dataset. This output file contains the following fields:
+  - \<name query dataset\>: the cluster in the query dataset
+  - \<name reference dataset\>: the cluster in the reference dataset
+  - Number of matches: the number of (real) DEG matches between the query and reference cluster
+  - Enrichment fold: the enrichment fold between the number of real matches and the average number of matches in the background
+  - P-value: the p-value of the enrichment
+  - Q-value: the adjusted p-value (i.e. q-value), calculated by adjusting the p-value for multiple testing using the [Benjamini-Hochberg procedure](https://www.statsmodels.org/dev/generated/statsmodels.stats.multitest.multipletests.html)
+  - Significance: does the q-value pass the significance threshold?
+  - Match IDs: the IDs of the matching DEGs (either the orthologous group IDs in case of a cross-species comparison, or the gene IDs in case of a comparison within-species)
+  - Matching query genes: the IDs of the matching query DEGs (always gene IDs, thus identical to "Match IDs" in case of a comparison within-species)
+  - Matching reference genes: the IDs of the matching reference DEGs (always gene IDs, thus identical to "Match IDs" in case of a comparison within-species)
+- `cluster_deg_overlap_statistics_combined_best_hits.xlsx`: this output file is a subset of the `cluster_deg_overlap_statistics.xlsx` file, but has merged the two-way comparison together by selecting the one with the lowest q-value. Then, for each cluster, only the best (significant) hit in the other dataset is retained. This is done for both datasets.
+  - This output file contains the same output fields as `cluster_deg_overlap_statistics.xlsx`.
+- `log.txt`: the log file, tracking the progress of the run during excecution
