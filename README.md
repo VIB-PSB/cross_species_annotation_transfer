@@ -47,3 +47,6 @@ The framework produces two output files, and a log file in which the progress ca
 - `cluster_deg_overlap_statistics_combined_best_hits.xlsx`: this output file is a subset of the `cluster_deg_overlap_statistics.xlsx` file, but has merged the two-way comparison together by selecting the one with the lowest q-value. Then, for each cluster, only the best (significant) hit in the other dataset is retained. This is done for both datasets.
   - This output file contains the same output fields as `cluster_deg_overlap_statistics.xlsx`.
 - `log.txt`: the log file, tracking the progress of the run during excecution
+
+## Dependencies
+Python dependencies are listed in [`requirements.txt`](https://github.com/VIB-PSB/cross_species_annotation_transfer/blob/main/requirements.txt).
