@@ -585,15 +585,6 @@ def combine_and_write_statistics_to_excel(overlap_statistics_long_dict, output_f
 
         # Add combined table to the dict
         overlap_statistics_long_combined_dict[comparison] = statistics_combined
-        
-    # Open Excel writer to write to multiple Excle sheets
-    with pd.ExcelWriter(output_file) as writer:
-        
-        # Write all combined comparisons to an Excel
-        for comparison, overlap_statistics_long_combined in overlap_statistics_long_combined_dict.items():
-            
-            # Write the final combined dataframe to a sheet in the Excel file
-            overlap_statistics_long_combined.to_excel(writer, index=False, sheet_name=comparison)
     
     # Open Excel writer to write to multiple Excle sheets
     with pd.ExcelWriter(".".join(output_file.split(".")[:-1])+"_best_hits.xlsx") as writer:
