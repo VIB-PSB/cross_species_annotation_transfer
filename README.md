@@ -46,7 +46,8 @@ The framework produces two output files, and a log file in which the progress ca
   - Matching reference genes: the IDs of the matching reference DEGs (always gene IDs, thus identical to "Match IDs" in case of a comparison within-species)
 - `cluster_deg_overlap_statistics_combined_best_hits.xlsx`: this output file is a subset of the `cluster_deg_overlap_statistics.xlsx` file, but has merged the two-way comparison together by selecting the one with the lowest q-value. Then, for each cluster, only the best (significant) hit in the other dataset is retained. This is done for both datasets.
   - This output file contains the same output fields as `cluster_deg_overlap_statistics.xlsx`.
+- `<dataset1>-<dataset2>_overlap_significance.png`: this is an additional output file, visualizing the results of  `cluster_deg_overlap_statistics.xlsx`. The figure contains 3 x 2 figures. The two columns left and right correspond to the two-way comparison between the two datasets. The three rows show for every cluster-cluster comparison the log<sub>10</sub>(q-value), the significance, and the enrichment fold respectively.
 - `log.txt`: the log file, tracking the progress of the run during execution
 
 ## Dependencies
-Python dependencies are listed in [`requirements.txt`](https://github.com/VIB-PSB/cross_species_annotation_transfer/blob/main/requirements.txt).
+This framework was developed using Python 3.8.0, with dependencies listed in [`requirements.txt`](https://github.com/VIB-PSB/cross_species_annotation_transfer/blob/main/requirements.txt).
