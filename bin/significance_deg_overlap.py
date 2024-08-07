@@ -24,10 +24,13 @@ def read_files(file_locs, sep=",", include_orthogroups=True):
     Parameters:
         file_locs (dict): A dictionary with keys as species and values as the location of DEG files for each species.
         sep (str): The delimiter used in the DEG files. Default is ",".
+        include_orthogroups (bool): Whether to include orthogroups in the output dataframes. Default is True.
 
     Returns:
-        dict: A dictionary with keys as species and values as dataframes containing selected columns
-              (cluster, gene ID, Orthogroup, logFC, q-value) from the corresponding DEG files.
+        dict: A dictionary with keys as species and values as dataframes containing selected columns:
+              - If include_orthogroups is True: ["cluster", "gene ID", "Orth_group", "avg_log2FC", "p_val_adj"]
+              - If include_orthogroups is False: ["cluster", "gene ID", "avg_log2FC", "p_val_adj"]
+              Each dataframe contains the corresponding DEG information from the input files.
     """
     
     species2df_dict = dict()
@@ -58,15 +61,17 @@ def convert_df_to_dict(species2df_dict, include_orthogroups=True, remove_duplica
 
     Parameters:
         species2df_dict (dict): A dictionary with keys as species and values as dataframes containing
-                                DEG information with columns "cluster", "gene ID", and "Orth_group".
+                                DEG information with columns "cluster", "gene ID", and optionally "Orth_group".
+        include_orthogroups (bool): A flag indicating whether to include orthogroups in the output dictionaries. Default is True.
         remove_duplicate_genes (bool): A flag indicating whether to remove duplicate gene IDs within the same cluster.
                                        Default is False.
 
     Returns:
-        tuple: A tuple containing two dictionaries:
-            - species2gene2group: A dictionary with keys as species and values as dictionaries mapping gene IDs to Orthogroups.
-            - species2cluster2genes_and_groups: A dictionary with keys as species and values as dictionaries
-                                               mapping cluster names to sets of genes and Orthogroups.
+        tuple: A tuple containing two elements:
+            - species2gene2group (dict or None): A dictionary with keys as species and values as dictionaries mapping gene IDs to Orthogroups. 
+                                                 Returns None if include_orthogroups is False.
+            - species2cluster2genes_and_groups (dict): A dictionary with keys as species and values as dictionaries
+                                                       mapping cluster names to sets of genes and optionally orthogroups.
     """
     
     species2cluster2genes_and_groups = dict()
@@ -132,15 +137,13 @@ def get_background(background_degs, cluster_size, nb_of_background_sets=10000, s
     Generate a background model by randomly sampling genes from the background DEGs.
 
     Parameters:
-        background_degs (list): A list of genes from which random samples will be drawn to create background sets.
+        background_degs (list): A list of DEGs from which random samples will be drawn to create background sets.
         cluster_size (int): The desired size of each background set (number of genes in each set).
         nb_of_background_sets (int): The number of background sets to generate. Default is 10000.
-        gene2group_dict (dict): A dictionary mapping gene IDs to orthogroups. If provided, the function
-                                converts randomly sampled genes to their corresponding orthogroups. Default is None.
+        seed (int): Seed for the random number generator to ensure reproducibility. Default is 0.
 
     Returns:
-        list: A list containing "nb_of_background_sets" sets, each representing a background set of genes.
-              If gene2group_dict is provided, the genes are converted to orthogroups in each background set.
+        list: A list containing "nb_of_background_sets" sets, each representing a background set of DEGs.
     """
 
     # Calculate the probability of finding a given DEG in the background (as it could be included in multiple clusters)
@@ -174,21 +177,23 @@ def calculate_overlap_statistics(species1, species2, cluster1, cluster2, species
         cluster1 (str): The name of the cluster in the reference species for comparison.
         cluster2 (str): The name of the cluster in the query species.
         species2cluster2genes_and_groups (dict): A dictionary with keys as species and values as dictionaries
-                                                 mapping cluster names to sets of genes and Orthogroups.
-        gene2group_dict (dict): A dictionary mapping gene IDs to orthogroups. Required if compare_families is False.
+                                                 mapping cluster names to sets of genes and orthogroups.
+        gene2group_dict (dict): A dictionary mapping gene IDs to orthogroups. Required if compare_orthogroups is True.
         nb_of_background_sets (int): The number of background sets to generate for statistical comparison. Default is 10000.
         minimal_real_matches (int): The minimum number of real matches required for meaningful statistical analysis. Default is 1.
-        compare_orthogroups (bool): Flag to indicate whether to compare orthogroups (across species), or genes IDs (within species). 
+        compare_orthogroups (bool): Flag to indicate whether to compare orthogroups (across species) or gene IDs (within species). 
                                     Default is True.
-        all_clusters_as_background (bool): Flag to indicate whether to sample from all clusters as background, or all clusters,
+        all_clusters_as_background (bool): Flag to indicate whether to sample from all clusters as background, or all clusters
                                            except for the cluster of interest. Default is False.
 
     Returns:
-        tuple: A tuple containing three values:
+        tuple: A tuple containing six values:
             - real_matches (int): The number of matches between the real cluster and the query cluster.
             - enrichment_fold (float): The enrichment fold, indicating the degree of enrichment of real matches compared to background.
             - p_val (float): The p-value indicating the significance of the enrichment.
-
+            - matching_degs (str): A comma-separated string of matching DEGs (either gene IDs or orthogroups).
+            - matching_genes_species1 (str): A comma-separated string of matching gene IDs in the reference species.
+            - matching_genes_species2 (str): A comma-separated string of matching gene IDs in the query species.
     """
     
     # Check that there is orthology info given when comparing orthogroups
@@ -308,7 +313,7 @@ def correct_p_values(p_value_df):
     return adjusted_p_value_df
 
 
-def get_all_statistics(species1, species2, species2cluster2genes_and_groups, gene2group_dict=None, nb_of_background_sets=10000, minimal_real_matches=1, compare_orthogroups=True, all_clusters_as_background=False, verbose=True):
+def get_all_statistics(species1, species2, species2cluster2genes_and_groups, gene2group_dict=None, nb_of_background_sets=10000, minimal_real_matches=1, compare_orthogroups=True, all_clusters_as_background=True, verbose=True):
     
     """
     Calculate overlap statistics for all combinations of clusters between two species.
@@ -317,22 +322,25 @@ def get_all_statistics(species1, species2, species2cluster2genes_and_groups, gen
         species1 (str): The name of the reference species.
         species2 (str): The name of the species being compared to the reference species (query species).
         species2cluster2genes_and_groups (dict): A dictionary with keys as species and values as dictionaries
-                                                 mapping cluster names to sets of genes and Orthogroups.
-        gene2group_dict (dict): A dictionary mapping gene IDs to orthogroups. 
+                                                 mapping cluster names to sets of genes and orthogroups.
+        gene2group_dict (dict): A dictionary mapping gene IDs to orthogroups. Required if compare_orthogroups is True.
         nb_of_background_sets (int): The number of background sets to generate for statistical comparison. Default is 10000.
         minimal_real_matches (int): The minimum number of real matches required for meaningful statistical analysis. Default is 1.
-        compare_families (bool): Flag to indicate whether to collapse all genes into gene families (orthogroups) instead of 
-                                 matching all individual genes. Default is False.
+        compare_orthogroups (bool): Flag to indicate whether to compare orthogroups (across species), or gene IDs (within species). 
+                                    Default is True.
         all_clusters_as_background (bool): Flag to indicate whether to sample from all clusters as background, or all clusters,
-                                           except for the cluster of interest. Default is False.
+                                           except for the cluster of interest. Default is True.
         verbose (bool): Flag to indicate whether to print progress information during the calculation. Default is True.
 
     Returns:
-        tuple: A tuple containing four DataFrames:
+        tuple: A tuple containing six DataFrames:
             - all_matches_df (pd.DataFrame): Number of matches between clusters from species 1 and 2.
             - all_enrichment_folds_df (pd.DataFrame): Enrichment fold for each cluster pair.
             - all_p_vals_df (pd.DataFrame): P-values for each cluster pair.
             - all_adj_p_vals_df (pd.DataFrame): Adjusted p-values (multiple testing correction) for each cluster pair.
+            - matching_degs_df (pd.DataFrame): Matching DEGs between clusters.
+            - matching_genes_species1_df (pd.DataFrame): Matching genes from species 1 for each cluster pair.
+            - matching_genes_species2_df (pd.DataFrame): Matching genes from species 2 for each cluster pair.
     """
     
     # Extract the cluster names of both species
@@ -374,7 +382,7 @@ def get_all_statistics(species1, species2, species2cluster2genes_and_groups, gen
     return all_matches_df, all_enrichment_folds_df, all_p_vals_df, all_adj_p_vals_df, matching_degs_df, matching_genes_species1_df, matching_genes_species2_df
 
 
-def calculate_two_way_statistics(species1, species2, species2cluster2genes_and_groups, gene2group_dict=None, nb_of_background_sets=1000, minimal_real_matches=2, compare_orthogroups=True, all_clusters_as_background=False, verbose=True):
+def calculate_two_way_statistics(species1, species2, species2cluster2genes_and_groups, gene2group_dict=None, nb_of_background_sets=10000, minimal_real_matches=2, compare_orthogroups=True, all_clusters_as_background=True, verbose=True):
     
     """
     Calculate two-way overlap statistics between two species, considering both directions of comparison.
@@ -383,23 +391,27 @@ def calculate_two_way_statistics(species1, species2, species2cluster2genes_and_g
         species1 (str): The name of the first species for comparison.
         species2 (str): The name of the second species for comparison.
         species2cluster2genes_and_groups (dict): A dictionary with keys as species and values as dictionaries
-                                                 mapping cluster names to sets of genes and Orthogroups.
-        gene2group_dict (dict): A dictionary mapping gene IDs to orthogroups. Required if compare_families is False.
+                                                 mapping cluster names to sets of genes and orthogroups.
+        gene2group_dict (dict): A dictionary mapping gene IDs to orthogroups. Required if compare_orthogroups is True.
         nb_of_background_sets (int): The number of background sets to generate for statistical comparison. Default is 1000.
         minimal_real_matches (int): The minimum number of real matches required for meaningful statistical analysis. Default is 2.
-        compare_families (bool): Flag to indicate whether to compare gene families instead of orthogroups. Default is True.
+        compare_orthogroups (bool): Flag to indicate whether to compare orthogroups (across species), or gene IDs (within species).
+                                    Default is True.
         all_clusters_as_background (bool): Flag to indicate whether to sample from all clusters as background, or all clusters,
-                                           except for the cluster of interest. Default is False.
+                                           except for the cluster of interest. Default is True.
         verbose (bool): Flag to indicate whether to print progress information during the calculation. Default is True.
 
     Returns:
-        dict: A dictionary containing four DataFrames for each direction of comparison (e.g. species 1 to species 2):
-            key (str) = "species1-to-species2:
-            value (tuple) = A tuple containing four DataFrames:
-                - all_matches_df_mean (pd.DataFrame): Mean number of matches between clusters from both species.
-                - all_enrichment_folds_df_mean (pd.DataFrame): Mean enrichment fold for each cluster pair.
-                - all_p_vals_df_mean (pd.DataFrame): Mean p-values for each cluster pair.
-                - all_adj_p_vals_df_mean (pd.DataFrame): Mean adjusted p-values (multiple testing correction) for each cluster pair.
+        dict: A dictionary containing tuples of DataFrames for each direction of comparison:
+            key (str) = "species1-to-species2" or "species2-to-species1":
+            value (tuple) = A tuple containing seven DataFrames:
+                - all_matches_df (pd.DataFrame): Number of matches between clusters from both species.
+                - all_enrichment_folds_df (pd.DataFrame): Enrichment fold for each cluster pair.
+                - all_p_vals_df (pd.DataFrame): P-values for each cluster pair.
+                - all_adj_p_vals_df (pd.DataFrame): Adjusted p-values (multiple testing correction) for each cluster pair.
+                - matching_degs_df (pd.DataFrame): Matching differentially expressed genes (DEGs) between clusters.
+                - matching_genes_species1_df (pd.DataFrame): Matching genes from species 1 for each cluster pair.
+                - matching_genes_species2_df (pd.DataFrame): Matching genes from species 2 for each cluster pair.
     """
     
     # Calculate all statistics from species 1 to species 2
@@ -454,18 +466,33 @@ def generate_visualization(overlap_statistics, species1, species2, cmap="viridis
     Generate a visualization of overlap statistics between clusters from two species.
 
     Parameters:
-        overlap_statistics (dict): A dictionary containing four DataFrames for each direction of comparison (e.g. species 1 to species 2):
-            key (str) = "species1-to-species2:
-            value (tuple) = A tuple containing four DataFrames:
-                - all_matches_df_mean (pd.DataFrame): Mean number of matches between clusters from both species.
-                - all_enrichment_folds_df_mean (pd.DataFrame): Mean enrichment fold for each cluster pair.
-                - all_p_vals_df_mean (pd.DataFrame): Mean p-values for each cluster pair.
-                - all_adj_p_vals_df_mean (pd.DataFrame): Mean adjusted p-values (multiple testing correction) for each cluster pair.
+        overlap_statistics (dict): A dictionary containing seven DataFrames for each direction of comparison (e.g. species 1 to species 2):
+            key (str) = "species1-to-species2":
+            value (tuple) = A tuple containing seven DataFrames:
+                - all_matches_df (pd.DataFrame): Number of matches between clusters from both species.
+                - all_enrichment_folds_df (pd.DataFrame): Enrichment fold for each cluster pair.
+                - all_p_vals_df (pd.DataFrame): P-values for each cluster pair.
+                - all_adj_p_vals_df (pd.DataFrame): Adjusted p-values (multiple testing correction) for each cluster pair.
+                - matching_degs_df (pd.DataFrame): Matching differentially expressed genes (DEGs) between clusters.
+                - matching_genes_species1_df (pd.DataFrame): Matching genes from species 1 for each cluster pair.
+                - matching_genes_species2_df (pd.DataFrame): Matching genes from species 2 for each cluster pair.
         species1 (str): The name of the first species for comparison.
         species2 (str): The name of the second species for comparison.
+        cmap (str): The colormap to use for the heatmaps. Default is "viridis".
 
     Returns:
         matplotlib.figure.Figure: The generated matplotlib figure.
+
+    Visualization Details:
+        The function generates a matplotlib figure with six subplots organized in a 3x2 grid:
+            1. Heatmap of -log(q-values) for the comparison from species1 to species2.
+            2. Heatmap of -log(q-values) for the comparison from species2 to species1.
+            3. Binary significance heatmap (q-value < 0.05) for the comparison from species1 to species2.
+            4. Binary significance heatmap (q-value < 0.05) for the comparison from species2 to species1.
+            5. Heatmap of enrichment fold for the comparison from species1 to species2.
+            6. Heatmap of enrichment fold for the comparison from species2 to species1.
+
+        The figure is saved as a PNG file named "{species1}-{species2}_overlap_significance.png".
     """
     
     # Define subplots
@@ -514,10 +541,15 @@ def remove_two_way_redundancy(all_comparisons):
     Remove the two-way redundancy in the comparisons (remove the reverse comparison).
 
     Parameters:
-        all_comparisons (iterable): An iterable containing all comparisons.
+        all_comparisons (iterable): An iterable containing all comparisons. Each comparison should be a string
+                                    in the format "species1-to-species2".
 
     Returns:
-        unique_comparison_couples (list): A list of unique comparison couples with redundancy removed.
+        list: A list of unique comparison couples with redundancy removed. Each entry in the list is a string 
+              representing a comparison in the format "species1-to-species2".
+
+    Example:
+        If the input contains comparisons ["A-to-B", "B-to-A", "C-to-D"], the function will return ["A-to-B", "C-to-D"].
     """
     
     remaining_comparisons = set(all_comparisons)
@@ -545,11 +577,24 @@ def combine_and_write_statistics_to_excel(overlap_statistics_long_dict, output_f
     Combine (take the best of each two-way comparison) and write overlap statistics to an Excel file with multiple sheets.
 
     Parameters:
-        overlap_statistics_long_dict (dict): A dictionary with the long format DataFrames for each comparison.
-        output_file (str): Output file name
+        overlap_statistics_long_dict (dict): A dictionary containing the long format DataFrames for each comparison.
+                                             The keys are comparison strings in the format "species1-to-species2".
+                                             Each value is a DataFrame with columns:
+                                                - "{} cluster" (str): Cluster name from the first species.
+                                                - "{} cluster" (str): Cluster name from the second species.
+                                                - "number of matches" (float): Number of matches between clusters.
+                                                - "enrichment fold" (float): Enrichment fold for each cluster pair.
+                                                - "p-value" (float): P-values for each cluster pair.
+                                                - "q-value" (float): Adjusted p-values (multiple testing correction) for each cluster pair.
+                                                - "significant" (boolean): True if q-value is significant, false otherwise.
+        output_file (str): The name of the output Excel file.
 
     Returns:
         None: The function writes the Excel file directly.
+
+    Excel File Structure:
+        The resulting Excel file will have multiple sheets, each corresponding to a species-to-species comparison.
+        Each sheet will contain a DataFrame with significant hits, sorted by q-value and enrichment fold.
     """
     
     # Initialize combined long table dict
@@ -614,14 +659,17 @@ def write_statistics_to_excel(overlap_statistics, significance_cutoff=0.05):
     Write overlap statistics to an Excel file with multiple sheets.
 
     Parameters:
-        overlap_statistics (dict): A dictionary containing four DataFrames for each direction of comparison (e.g. species 1 to species 2):
-            key (str) = "species1-to-species2:
-            value (tuple) = A tuple containing four DataFrames:
-                - all_matches_df_mean (pd.DataFrame): Mean number of matches between clusters from both species.
-                - all_enrichment_folds_df_mean (pd.DataFrame): Mean enrichment fold for each cluster pair.
-                - all_p_vals_df_mean (pd.DataFrame): Mean p-values for each cluster pair.
-                - all_adj_p_vals_df_mean (pd.DataFrame): Mean adjusted p-values (multiple testing correction) for each cluster pair.
-        significance_cutoff: q-value cutoff at which an overlap is considered significant. Default is q-value < 0.05.
+        overlap_statistics (dict): A dictionary containing seven DataFrames for each direction of comparison (e.g. species 1 to species 2):
+            key (str) = "species1-to-species2":
+            value (tuple) = A tuple containing seven DataFrames:
+                - all_matches_df (pd.DataFrame): Number of matches between clusters from both species.
+                - all_enrichment_folds_df (pd.DataFrame): Enrichment fold for each cluster pair.
+                - all_p_vals_df (pd.DataFrame): P-values for each cluster pair.
+                - all_adj_p_vals_df (pd.DataFrame): Adjusted p-values (multiple testing correction) for each cluster pair.
+                - matching_degs_df (pd.DataFrame): Matching differentially expressed genes (DEGs) between clusters.
+                - matching_genes_species1_df (pd.DataFrame): Matching genes from species 1 for each cluster pair.
+                - matching_genes_species2_df (pd.DataFrame): Matching genes from species 2 for each cluster pair.
+        significance_cutoff (float): q-value cutoff at which an overlap is considered significant. Default is q-value < 0.05.
 
     Returns:
         None: The function writes the Excel file directly.
@@ -631,11 +679,14 @@ def write_statistics_to_excel(overlap_statistics, significance_cutoff=0.05):
         Each sheet contains a long-format DataFrame with columns:
             - "{} cluster" (str): Cluster name from the first species.
             - "{} cluster" (str): Cluster name from the second species.
-            - "number of matches" (float): Mean number of matches between clusters.
-            - "enrichment fold" (float): Mean enrichment fold for each cluster pair.
-            - "p-value" (float): Mean p-values for each cluster pair.
-            - "q-value" (float): Mean adjusted p-values (multiple testing correction) for each cluster pair.
-            - "significant" (boolean): True if q-value is significant, false otherwise
+            - "number of matches" (float): Number of matches between clusters.
+            - "enrichment fold" (float): Enrichment fold for each cluster pair.
+            - "p-value" (float): P-values for each cluster pair.
+            - "q-value" (float): Adjusted p-values (multiple testing correction) for each cluster pair.
+            - "match IDs" (str): Matching DEGs between clusters.
+            - "matching genes 1" (str): Matching genes from species 1 for each cluster pair.
+            - "matching genes 2" (str): Matching genes from species 2 for each cluster pair.
+            - "significant" (bool): True if q-value is significant, false otherwise.
     """
     
     # Open Excel writer to write to multiple Excle sheets
@@ -723,7 +774,6 @@ def run_overlap_analysis(file_locs, separator, compare_orthogroups, nb_of_backgr
             nb_of_background_sets=nb_of_background_sets, 
             minimal_real_matches=minimal_real_matches, 
             compare_orthogroups=compare_orthogroups, 
-            all_clusters_as_background=True
         )
         
         # Combine all results
@@ -734,5 +784,4 @@ def run_overlap_analysis(file_locs, separator, compare_orthogroups, nb_of_backgr
 
     # Write everything to Excel
     write_statistics_to_excel(overlap_statistics_all, significance_cutoff=significance_cutoff)
-
             
