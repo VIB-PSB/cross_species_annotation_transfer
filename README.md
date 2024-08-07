@@ -2,7 +2,7 @@
 This framework aims to transfer existing single-cell cluster annotations to a new dataset by detecting cluster similarities.
 
 ## Input
-This framework takes as input two CSV files, containing the differentially expressed genes (DEGs), or marker genes, of each cluster. Inference of these DEGs should be done prior, and is not part of the framework. We recommend filtering the input data to only retain high-quality DEGs. This is currently also not part of the framework and should be done prior.
+This framework takes as input minimally two CSV files, containing the differentially expressed genes (DEGs), or marker genes, of each cluster. Inference of these DEGs should be done prior, and is not part of the framework. We recommend filtering the input data to only retain high-quality DEGs. This is currently also not part of the framework and should be done prior.
 
 To infer DEGs, we suggest using [Seurat](https://satijalab.org/seurat/)'s [`FindAllMarkers()`](https://www.rdocumentation.org/packages/Seurat/versions/5.0.3/topics/FindAllMarkers) function, although other methods might be employed. To filter the input DEGs, we recommend to either set a cutoff (on log fold change and/or adjusted p-value), or by taking the top N best DEGs (sorting on q-value, and using fold change to break ties).
 
@@ -15,6 +15,8 @@ Each input CSV file should have the following column names:
 
 NOTE: The orthologous group IDs were calculated using [OrthoFinder](https://github.com/davidemms/OrthoFinder). Precomputed orthology files, including several commonly used plant species, are available through [PLAZA](https://bioinformatics.psb.ugent.be/plaza/).
 
+When more than two input files are given, all pairwise combinations of the given datasets will be evaluated.
+
 ## Parameters
 - *separator* (default = ","): the column separator of the input CSV files
 - *nb_of_background_sets* (default = 1000): the number of background sets (determines the minimal p-value that can be calculated)
@@ -23,12 +25,6 @@ NOTE: The orthologous group IDs were calculated using [OrthoFinder](https://gith
 - *significance_threshold* (default = 0.05): the adjusted p-value threshold at which the DEG overlap between two clusters is considered significant
 
 NOTE: the *nb_of_background_sets* parameter strongly affects the runtime
-
-## Running
-Execute the Python script in this folder.
-```
-python significance_deg_overlap_pyscript.py
-```
 
 ## Output
 The framework produces two output files, and a log file in which the progress can be followed during execution.
@@ -48,6 +44,12 @@ The framework produces two output files, and a log file in which the progress ca
   - This output file contains the same output fields as `cluster_deg_overlap_statistics.xlsx`.
 - `<dataset1>-<dataset2>_overlap_significance.png`: this is an additional output file, visualizing the results of  `cluster_deg_overlap_statistics.xlsx`. The figure contains 3 x 2 figures. The two columns left and right correspond to the two-way comparison between the two datasets. The three rows show for every cluster-cluster comparison the log<sub>10</sub>(q-value), the significance, and the enrichment fold respectively.
 - `log.txt`: the log file, tracking the progress of the run during execution
+
+## Running
+Execute the Python script in this folder.
+```
+python significance_deg_overlap_pyscript.py
+```
 
 ## Dependencies
 This framework was developed using Python 3.8.0, with dependencies listed in [`requirements.txt`](https://github.com/VIB-PSB/cross_species_annotation_transfer/blob/main/requirements.txt).
