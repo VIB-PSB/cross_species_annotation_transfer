@@ -5,7 +5,7 @@ file_locs = {"tae_sc":"input/tae_log2FC0.5_FDR0.05.csv", "tae_sn":"input/tae_sn_
 
 # Define parameters
 compare_orthogroups=False
-separator = ";"
+separator = ","
 nb_of_background_sets = 1000
 minimal_real_matches = 2
 significance_cutoff = 0.05
