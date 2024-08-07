@@ -1,4 +1,4 @@
-Calculating background sets for tae_sc
+Calculating background sets for wheat_sc
 [RUNNING] cluster 1
 [RUNNING] cluster 2
 [RUNNING] cluster 3
@@ -13,7 +13,7 @@ Calculating background sets for tae_sc
 [RUNNING] cluster 12
 [RUNNING] cluster 13
 [RUNNING] cluster 14
-Calculating background sets for tae_sn
+Calculating background sets for wheat_sn
 [RUNNING] cluster 0
 [RUNNING] cluster 1
 [RUNNING] cluster 2
