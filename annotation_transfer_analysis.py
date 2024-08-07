@@ -8,10 +8,12 @@ compare_orthogroups=False
 separator = ";"
 nb_of_background_sets = 1000
 minimal_real_matches = 2
-significance_threshold = 0.05
+significance_cutoff = 0.05
 
 # Import functions from bin folder
-from bin.significance_deg_overlap import * # custom module
+import sys, os
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'bin'))
+from significance_deg_overlap import *
 
 # Run the analysis
 run_overlap_analysis(
