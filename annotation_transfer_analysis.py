@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 # Define input file locations
-file_locs = {"tae_sc":"input/tae_log2FC0.5_FDR0.05.csv", "tae_sn":"input/tae_sn_top_100_markers_original.csv"}
+file_locs = {"wheat":"input/tae_log2FC0.5_FDR0.05.csv", "rice":"input/osa_Nip_log2fc0.5_fdr0.05.csv"}
 
 # Define parameters
-compare_orthogroups=False
+compare_orthogroups=True
 separator = ","
 nb_of_background_sets = 1000
 minimal_real_matches = 2
