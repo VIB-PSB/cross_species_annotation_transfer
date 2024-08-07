@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Define input file locations
-file_locs = {"wheat":"input/tae_log2FC0.5_FDR0.05.csv", "rice":"input/osa_Nip_log2fc0.5_fdr0.05.csv"}
+file_locs = {"wheat":"input/wheat_log2fc0.5_fdr0.05.csv", "rice":"input/rice_log2fc0.5_fdr0.05.csv"}
 
 # Define parameters
 compare_orthogroups=True

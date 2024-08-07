@@ -17,8 +17,8 @@ Calculating background sets for rice
 [RUNNING] cluster cortex
 [RUNNING] cluster endodermis
 [RUNNING] cluster epidermis
+[RUNNING] cluster mature epidermis
 [RUNNING] cluster metaxylem
-[RUNNING] cluster near root hair
 [RUNNING] cluster root cap
 [RUNNING] cluster root_hair
 [RUNNING] cluster stele
