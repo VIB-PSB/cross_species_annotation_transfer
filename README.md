@@ -18,11 +18,11 @@ NOTE: The orthologous group IDs were calculated using [OrthoFinder](https://gith
 When more than two input files are given, all pairwise combinations of the given datasets will be evaluated.
 
 ## Parameters
-- *separator* (default = ","): the column separator of the input CSV files
-- *nb_of_background_sets* (default = 1000): the number of background sets (determines the minimal p-value that can be calculated)
-- *minimal_real_matches* (default = 2): the minimal number of background sets that has to show an overlap with the query cluster DEGs, larger than or equal to the real overlap between the query and reference cluster. E.g., if this parameter is set to 2, and there is only 1 background set of which the overlap with the query cluster is larger than or equal to the real overlap, the p-value will automatically be set to 1.
-- *compare_orthogroups* (default = `False`): use the orthogroups (orthologous groups) to compare the clusters of the different dataset. This should be set to `True` if a cross-species is being performed, it should be set to `False` if a comparison within the same species is being performed.
-- *significance_threshold* (default = 0.05): the adjusted p-value threshold at which the DEG overlap between two clusters is considered significant
+- `compare_orthogroups` (default = `False`): use the orthogroups (orthologous groups) to compare the clusters of the different dataset. This should be set to `True` if a cross-species is being performed, it should be set to `False` if a comparison within the same species is being performed.
+- `separator` (default = ","): the column separator of the input CSV files
+- `nb_of_background_sets` (default = 1000): the number of background sets (determines the minimal p-value that can be calculated)
+- `minimal_real_matches` (default = 2): the minimal number of background sets that has to show an overlap with the query cluster DEGs, larger than or equal to the real overlap between the query and reference cluster. E.g., if this parameter is set to 2, and there is only 1 background set of which the overlap with the query cluster is larger than or equal to the real overlap, the p-value will automatically be set to 1.
+- `significance_threshold` (default = 0.05): the adjusted p-value threshold at which the DEG overlap between two clusters is considered significant
 
 NOTE: the *nb_of_background_sets* parameter strongly affects the runtime
 

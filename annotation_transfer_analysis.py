@@ -4,7 +4,7 @@
 file_locs = {"wheat":"input/wheat_log2fc0.5_fdr0.05.csv", "rice":"input/rice_log2fc0.5_fdr0.05.csv"}
 
 # Define parameters
-compare_orthogroups=True
+compare_orthogroups=True # True when comparing between species, False when comparing within the same species
 separator = ","
 nb_of_background_sets = 1000
 minimal_real_matches = 2
