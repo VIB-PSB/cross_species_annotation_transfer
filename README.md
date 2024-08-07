@@ -48,7 +48,7 @@ The framework produces two output files, and a log file in which the progress ca
 ## Running
 Execute the Python script in this folder.
 ```
-python significance_deg_overlap_pyscript.py
+python annotation_transfer_analysis.py
 ```
 
 ## Dependencies
