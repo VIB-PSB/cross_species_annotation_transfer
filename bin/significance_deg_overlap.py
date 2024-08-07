@@ -11,8 +11,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from natsort import natsorted
-from statistics import median, mean
 from collections import Counter
+from itertools import combinations
+from statistics import median, mean
 from statsmodels.stats.multitest import multipletests
 
 def read_files(file_locs, sep=",", include_orthogroups=True):
@@ -122,7 +123,7 @@ def convert_df_to_dict(species2df_dict, include_orthogroups=True, remove_duplica
     if include_orthogroups:
         return species2gene2group, species2cluster2genes_and_groups
     else:
-        return species2cluster2genes_and_groups
+        return None, species2cluster2genes_and_groups
 
 
 def get_background(background_degs, cluster_size, nb_of_background_sets=10000, seed=0):
@@ -675,5 +676,63 @@ def write_statistics_to_excel(overlap_statistics, significance_cutoff=0.05):
     
     # Combine the statistics of both two-way comparisons and write results to Excel
     combine_and_write_statistics_to_excel(overlap_statistics_long_dict, "cluster_deg_overlap_statistics_combined.xlsx")
+
+
+def run_overlap_analysis(file_locs, separator, compare_orthogroups, nb_of_background_sets, minimal_real_matches, significance_cutoff):
+    
+    """
+    Run the DEG overlap analysis for all species combinations, generate visualizations, and write results to an Excel file.
+
+    Parameters:
+        file_locs (dict): A dictionary with keys as dataset names and values as file locations of the input data.
+        separator (str): The column separator used in the input files.
+        compare_orthogroups (bool): Whether to compare orthogroups, or gene IDs.
+        nb_of_background_sets (int): The number of background sets to use in the statistics calculation.
+        minimal_real_matches (int): The minimal number of background sets that has to show an overlap with the query cluster DEGs.
+        significance_cutoff (float): The cutoff value for significance in the results.
+
+    Returns:
+        None: the function generates the following output files directly:
+        - cluster_deg_overlap_statistics.xlsx
+        - cluster_deg_overlap_statistics_combined_best_hits.xlsx
+        - <dataset1>-<dataset2>_overlap_significance.png
+    """
+
+    # Collect all results
+    overlap_statistics_all = dict()
+
+    # Run for all species combinations
+    for species1, species2 in combinations(file_locs.keys(), 2):
+        
+        # Read in the input
+        species2df_dict = read_files(file_locs, sep=separator, include_orthogroups=compare_orthogroups)
+        
+        # Arrange the input in a good format
+        species2gene2group, species2cluster2genes_and_groups = convert_df_to_dict(species2df_dict, include_orthogroups=compare_orthogroups)
+        if species2gene2group is None:
+            gene2group_dict = None
+        else:
+            gene2group_dict = {**species2gene2group[species1], **species2gene2group[species2]}
+        
+        # Calculate all statistics for a species-species comparison
+        print("[STARTING] {} - {} comparison".format(species1, species2))
+        overlap_statistics = calculate_two_way_statistics(
+            species1, species2, 
+            species2cluster2genes_and_groups, 
+            gene2group_dict=gene2group_dict, 
+            nb_of_background_sets=nb_of_background_sets, 
+            minimal_real_matches=minimal_real_matches, 
+            compare_orthogroups=compare_orthogroups, 
+            all_clusters_as_background=True
+        )
+        
+        # Combine all results
+        overlap_statistics_all.update(overlap_statistics)
+        
+        # Generate plot
+        fig = generate_visualization(overlap_statistics, species1, species2)
+
+    # Write everything to Excel
+    write_statistics_to_excel(overlap_statistics_all, significance_cutoff=significance_cutoff)
 
             
