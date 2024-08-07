@@ -24,7 +24,7 @@ When more than two input files are given, all pairwise combinations of the given
 - `minimal_real_matches` (default = 2): the minimal number of background sets that has to show an overlap with the query cluster DEGs, larger than or equal to the real overlap between the query and reference cluster. E.g., if this parameter is set to 2, and there is only 1 background set of which the overlap with the query cluster is larger than or equal to the real overlap, the p-value will automatically be set to 1.
 - `significance_threshold` (default = 0.05): the adjusted p-value threshold at which the DEG overlap between two clusters is considered significant
 
-NOTE: the *nb_of_background_sets* parameter strongly affects the runtime
+NOTE: the `nb_of_background_sets` parameter strongly affects the runtime
 
 ## Output
 The framework produces two output files, and a log file in which the progress can be followed during execution.
